@@ -1,174 +1,208 @@
 package MLP;
 
-public class Matrix{
-	int row,column;
-	double[][] data;;
-	public Matrix(int r,int c) {
-		row = r;
-		column = c;
-		data = new double[row][column];
-		for(int x=0;x<this.row;x++) {
-			for(int y=0;y<this.column;y++) {
-				this.data[x][y] = 0;
+/*
+ * This Matrix class is used to represent mathematic objects called matrices 
+ * and performs the mathematical operations associated with matrices
+ * that are relevant to our machine learning classifiers such as MLP and SVM
+ */
+public class Matrix {
+	private int row;
+	private int column;
+	private double[][] data;
+
+	// defines the matix's dimensions
+	public Matrix(int row, int column) {
+		setRow(row);
+		setColumn(column);
+		setData(new double[getRow()][getColumn()]);
+		for (int x = 0; x < this.getRow(); x++) {
+			for (int y = 0; y < this.getColumn(); y++) {
+				this.getData()[x][y] = 0;
 			}
 		}
 	}
-	
-	//Matrix Product
-	public static Matrix multiply(Matrix a, Matrix b) {
-		Matrix result = new Matrix(a.row,b.column);
-		double sum=0;
-		for(int r=0;r<result.row;r++) {
-			sum=0;
-			for(int c=0;c<result.column;c++) {
-				for(int index=0;index<a.column;index++) {
-					sum = sum + a.data[r][index]*b.data[index][c];
+
+	// Matrix dot Product
+	public static Matrix dotProduct(Matrix m1, Matrix m2) {
+		Matrix result = new Matrix(m1.getRow(), m2.getColumn());
+		double sum = 0;
+		for (int row = 0; row < result.getRow(); row++) {
+			sum = 0;
+			for (int column = 0; column < result.getColumn(); column++) {
+				for (int index = 0; index < m1.getColumn(); index++) {
+					sum = sum + m1.getData()[row][index] * m2.getData()[index][column];
 				}
-				result.data[r][c]=sum;
-			}
-		}
-		return result;
-//		System.out.println("------------");
-//		for(int r=0;r<result.row;r++) {
-//			for(int c=0;c<result.column;c++) {
-//				System.out.print(result.data[r][c]+" ");
-//			}
-//			System.out.println();
-//		}
-//		System.out.print("------------");
-	}
-	
-	//scalar multiplication
-	public static Matrix scalarMultiply(Matrix a,double scalarMultiplier) {
-		Matrix result = new Matrix(a.row,a.column);
-		for(int row = 0;row<result.row;row++) {
-			for(int column = 0;column <result.column;column++) {
-				result.data[row][column] = a.data[row][column]*scalarMultiplier;
+				result.getData()[row][column] = sum;
 			}
 		}
 		return result;
 	}
-	
-	//add two matrix
-	public static Matrix elementWise(Matrix a,Matrix b) {
-		Matrix result = new Matrix(a.row,a.column);
-		for(int row = 0;row<result.row;row++) {
-			for(int column = 0;column <result.column;column++) {
-				result.data[row][column] = a.data[row][column]*b.data[row][column];
+
+	// add m1 new column to the end of the matrix
+	// containing the value '1' for each row
+	public static Matrix addOnes(Matrix m1) {
+		Matrix result = new Matrix(m1.getRow(), m1.getColumn() + 1);
+		for (int row = 0; row < result.getRow(); row++) {
+			for (int column = 0; column < result.getColumn(); column++) {
+				if (column == m1.getColumn()) {
+					result.getData()[row][column] = 1;
+				} else {
+					result.getData()[row][column] = m1.getData()[row][column];
+				}
+
 			}
 		}
 		return result;
 	}
-	
-//	public static double costFunction(Matrix target, Matrix output) {
-//		double result = 0;
-//		for(int row = 0;row<target.row;row++) {
-//			result = result + ((Math.pow(target.data[row][0]-output.data[row][0],2))*0.5);
-//		}
-//		
-//		return result;
-//	}
-	public static double costFunction(Matrix outputError) {
-		double result = 0;
-		for(int row = 0;row<outputError.row;row++) {
-			result = result + Math.pow(outputError.data[row][0],2);
+
+	// find the absolute value using the Pythagoras Theorum
+	public static double absoluteValue(Matrix m1) {
+		double sumOfSquares = 0;
+		for (int row = 0; row < m1.getRow(); row++) {
+			for (int column = 0; column < m1.getColumn(); column++) {
+				sumOfSquares = sumOfSquares + Math.pow(m1.getData()[row][column], 2);
+			}
 		}
-		
-		return result;
+		return Math.sqrt(sumOfSquares);
 	}
-	
-	//add two matrix
-	public static Matrix add(Matrix a,Matrix b) {
-		Matrix result = new Matrix(a.row,a.column);
-		for(int row = 0;row<result.row;row++) {
-			for(int column = 0;column <result.column;column++) {
-				result.data[row][column] = a.data[row][column]+b.data[row][column];
+
+	// multipy m1 Matrix by m1 scalar value
+	public static Matrix scalarMultiply(Matrix m1, double scalarMultiplier) {
+		Matrix result = new Matrix(m1.getRow(), m1.getColumn());
+		for (int row = 0; row < result.getRow(); row++) {
+			for (int column = 0; column < result.getColumn(); column++) {
+				result.getData()[row][column] = m1.getData()[row][column] * scalarMultiplier;
 			}
 		}
 		return result;
 	}
-	
-	//add bias
-//	public static Matrix addScalar(Matrix a, double scalar) {
-//		Matrix result = new Matrix(a.row,a.column);
-//		for(int row=0;row<a.row;row++) {
-//			result.data[row][0] = a.data[row][0]+scalar;
-//		}
-//		return result;
-//	}
-	
-	//add bias
-	public static Matrix subtract(Matrix a, Matrix b) {
-		Matrix result = new Matrix(a.row,a.column);
-		for(int row=0;row<a.row;row++) {
-			result.data[row][0] = a.data[row][0]-b.data[row][0];
-		}
-		return result;
-	}
-	
-	//flip the matrix so that rows = columns and column = rows
-	public static Matrix transpose(Matrix input) {
-		Matrix result = new Matrix(input.column,input.row);
-		for(int row = 0;row<result.row;row++) {
-			for(int column = 0;column<result.column;column++) {
-				result.data[row][column] = input.data[column][row];
+
+	// element wise multiplication of two matrices
+	public static Matrix elementWise(Matrix m1, Matrix m2) {
+		Matrix result = new Matrix(m1.getRow(), m1.getColumn());
+		for (int row = 0; row < result.getRow(); row++) {
+			for (int column = 0; column < result.getColumn(); column++) {
+				result.getData()[row][column] = m1.getData()[row][column] * m2.getData()[row][column];
 			}
 		}
 		return result;
 	}
-	
-	public static double sigmoid(double value) {
-		return 1/(1+(Math.exp(-value)));
-	}
-	
-	public static Matrix deactivate(Matrix a) {
-		Matrix result = new Matrix(a.row,a.column);
-		for(int row=0;row<a.row;row++) {
-			result.data[row][0] = a.data[row][0]*(1-a.data[row][0]);
+
+	// add two matrices
+	public static Matrix add(Matrix m1, Matrix m2) {
+		Matrix result = new Matrix(m1.getRow(), m1.getColumn());
+		for (int row = 0; row < result.getRow(); row++) {
+			for (int column = 0; column < result.getColumn(); column++) {
+				result.getData()[row][column] = m1.getData()[row][column] + m2.getData()[row][column];
+			}
 		}
 		return result;
 	}
-	
-	//apply sigmoid function
-	public static Matrix activation(Matrix a) {
-		Matrix result = new Matrix(a.row,a.column);
-		for(int row=0;row<a.row;row++) {
-			result.data[row][0] = sigmoid(a.data[row][0]);
+
+	// subtract two matrices
+	public static Matrix subtract(Matrix m1, Matrix m2) {
+		Matrix result = new Matrix(m1.getRow(), m1.getColumn());
+		for (int row = 0; row < m1.getRow(); row++) {
+			result.getData()[row][0] = m1.getData()[row][0] - m2.getData()[row][0];
 		}
 		return result;
 	}
-	
-	//array to matrix
+
+	// subtract m1 scalar value from m1 matrix
+	public static Matrix subtractScalar(Matrix m1, double scalarValue) {
+		Matrix result = new Matrix(m1.getRow(), m1.getColumn());
+		for (int row = 0; row < m1.getRow(); row++) {
+			result.getData()[row][0] = m1.getData()[row][0] - scalarValue;
+		}
+		return result;
+	}
+
+	// flip the matrix so that rows = columns and column = rows
+	public static Matrix transpose(Matrix m1) {
+		Matrix result = new Matrix(m1.getColumn(), m1.getRow());
+		for (int row = 0; row < result.getRow(); row++) {
+			for (int column = 0; column < result.getColumn(); column++) {
+				result.getData()[row][column] = m1.getData()[column][row];
+			}
+		}
+		return result;
+	}
+
+	// convert two-dimensional array to matrix
 	public static Matrix fromArray(double[][] array) {
-		Matrix result = new Matrix(array.length,array[0].length);
-			for(int row = 0;row<result.row;row++) {
-				for(int column=0;column<result.column;column++) {
-					result.data[row][column]=array[row][column];
-				}
+		Matrix result = new Matrix(array.length, array[0].length);
+		for (int row = 0; row < result.getRow(); row++) {
+			for (int column = 0; column < result.getColumn(); column++) {
+				result.getData()[row][column] = array[row][column];
 			}
+		}
 		return result;
 	}
-	
-	//matrix to array
-	public static double[][] toArray(Matrix m) {
-		double[][] result = new double[m.row][m.column];
-			for(int row = 0;row<m.row;row++) {
-				for(int column=0;column<m.column;column++) {
-					result[row][column]=m.data[row][column];
-				}
-			}
+
+	// convert one-dimensional array with integral values
+	// to matrix with column value as 1
+	public static Matrix from1DArray(int[] array) {
+		Matrix result = new Matrix(array.length, 1);
+		for (int row = 0; row < result.getRow(); row++) {
+			result.getData()[row][0] = array[row];
+		}
 		return result;
 	}
-	
-	//display data
+
+	// convert one-dimensional array with double value
+	// to matrix with column value as 1
+	public static Matrix from1DArrayDouble(double[] array) {
+		Matrix result = new Matrix(array.length, 1);
+		for (int row = 0; row < result.getRow(); row++) {
+			result.getData()[row][0] = array[row];
+		}
+		return result;
+	}
+
+	// convert matrix to array with the same dimensions
+	public static double[][] toArray(Matrix m1) {
+		double[][] result = new double[m1.getRow()][m1.getColumn()];
+		for (int row = 0; row < m1.getRow(); row++) {
+			for (int column = 0; column < m1.getColumn(); column++) {
+				result[row][column] = m1.getData()[row][column];
+			}
+		}
+		return result;
+	}
+
+	// display matrix data
 	public void print() {
 		System.out.println("------------");
-		for(int r=0;r<this.row;r++) {
-			for(int c=0;c<this.column;c++) {
-				System.out.print(this.data[r][c]+" ");
+		for (int row = 0; row < this.getRow(); row++) {
+			for (int column = 0; column < this.getColumn(); column++) {
+				System.out.print(this.getData()[row][column] + " ");
 			}
 			System.out.println();
 		}
 		System.out.println("------------");
+	}
+
+	public int getRow() {
+		return row;
+	}
+
+	public void setRow(int row) {
+		this.row = row;
+	}
+
+	public int getColumn() {
+		return column;
+	}
+
+	public void setColumn(int column) {
+		this.column = column;
+	}
+
+	public double[][] getData() {
+		return data;
+	}
+
+	public void setData(double[][] data) {
+		this.data = data;
 	}
 }
