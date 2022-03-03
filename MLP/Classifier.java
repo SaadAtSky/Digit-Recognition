@@ -1,60 +1,61 @@
 package MLP;
 
 /*
- * Implementation of a multiclass classifier based on a Multilayer Perceptron
+ * Implementation of a multiclass classifier based numberOfOutputNodes a Multilayer Perceptron
  * to attempt to accurately classify hand-written digits using the MNIST Data set
  */
 public class Classifier {
-	private int numOfHiddenLayers = 1;// note: all hidden layers will have the same number of nodes
+	private int numOfHiddenLayers;// note: all hidden layers will have the same number of nodes
 	private double learningRate;
 	private Matrix inputNodes, outputNodes, averageError;
-	private Matrix[] hiddenNodes = new Matrix[numOfHiddenLayers];
-	private Matrix[] hiddenWeights = new Matrix[numOfHiddenLayers];
-	private Matrix[] hiddenBias = new Matrix[numOfHiddenLayers];
-	private Matrix[] hiddenBiasDelta = new Matrix[numOfHiddenLayers];
+	private Matrix[] hiddenNodes,hiddenWeights,hiddenBias,hiddenBiasDelta,hiddenWeightsDelta,hiddenGradient;
 	private Matrix outputWeights, outputBias, outputBiasDelta, outputWeightsDelta, outputGradient;
-	private Matrix[] hiddenWeightsDelta = new Matrix[numOfHiddenLayers];
-	private Matrix[] hiddenGradient = new Matrix[numOfHiddenLayers];
 
-	public Classifier(int in, int hn, int on, int nOfHL) {
+	public Classifier(int numberOfInputNodes, int numberOfHiddenNodes, int numberOfOutputNodes, int numberOfHiddenLayers) {
 		// initialize nodes, weights, biases, and gradients
-		setNumberOfHiddenLayers(nOfHL);
+		setNumberOfHiddenLayers(numberOfHiddenLayers);
+		hiddenNodes = new Matrix[numOfHiddenLayers];
+		hiddenWeights = new Matrix[numOfHiddenLayers];
+		hiddenBias = new Matrix[numOfHiddenLayers];
+		hiddenBiasDelta = new Matrix[numOfHiddenLayers];
+		hiddenWeightsDelta = new Matrix[numOfHiddenLayers];
+		hiddenGradient = new Matrix[numOfHiddenLayers];
 		int singleColumn = 1;
-		inputNodes = new Matrix(in, singleColumn);
-		for (int index = 0; index < numOfHiddenLayers; index++) {
-			hiddenNodes[index] = new Matrix(hn, singleColumn);
-			hiddenGradient[index] = new Matrix(hn, singleColumn);
-			if (index > 0) {
-				hiddenWeightsDelta[index] = new Matrix(hn, hn);
-				hiddenWeights[index] = new Matrix(hn, hn);
+		inputNodes = new Matrix(numberOfInputNodes, singleColumn);
+		for (int hiddenLayerIndex = 0; hiddenLayerIndex < numOfHiddenLayers; hiddenLayerIndex++) {
+			hiddenNodes[hiddenLayerIndex] = new Matrix(numberOfHiddenNodes, singleColumn);
+			hiddenGradient[hiddenLayerIndex] = new Matrix(numberOfHiddenNodes, singleColumn);
+			if (hiddenLayerIndex > 0) {
+				hiddenWeightsDelta[hiddenLayerIndex] = new Matrix(numberOfHiddenNodes, numberOfHiddenNodes);
+				hiddenWeights[hiddenLayerIndex] = new Matrix(numberOfHiddenNodes, numberOfHiddenNodes);
 			} else {
-				hiddenWeightsDelta[index] = new Matrix(hn, in);
-				hiddenWeights[index] = new Matrix(hn, in);
+				hiddenWeightsDelta[hiddenLayerIndex] = new Matrix(numberOfHiddenNodes, numberOfInputNodes);
+				hiddenWeights[hiddenLayerIndex] = new Matrix(numberOfHiddenNodes, numberOfInputNodes);
 			}
-			randomize(hiddenWeights[index]);
-			hiddenBias[index] = new Matrix(hn, singleColumn);
-			randomize(hiddenBias[index]);
+			randomize(hiddenWeights[hiddenLayerIndex]);
+			hiddenBias[hiddenLayerIndex] = new Matrix(numberOfHiddenNodes, singleColumn);
+			randomize(hiddenBias[hiddenLayerIndex]);
 		}
 
-		outputNodes = new Matrix(on, singleColumn);
-		averageError = new Matrix(on, singleColumn);
-		outputGradient = new Matrix(on, singleColumn);
-		outputWeightsDelta = new Matrix(on, hn);
+		outputNodes = new Matrix(numberOfOutputNodes, singleColumn);
+		averageError = new Matrix(numberOfOutputNodes, singleColumn);
+		outputGradient = new Matrix(numberOfOutputNodes, singleColumn);
+		outputWeightsDelta = new Matrix(numberOfOutputNodes, numberOfHiddenNodes);
 
 		// initialize the weights for hidden output layer
-		outputWeights = new Matrix(on, hn);
+		outputWeights = new Matrix(numberOfOutputNodes, numberOfHiddenNodes);
 		randomize(outputWeights);
 
 		// initialize bias for output layer
-		outputBias = new Matrix(on, singleColumn);
+		outputBias = new Matrix(numberOfOutputNodes, singleColumn);
 		randomize(outputBias);
 	}
 
 	// initialize the values of a matrix between 1 and -1
-	public void randomize(Matrix m) {
-		for (int row = 0; row < m.getRow(); row++) {
-			for (int column = 0; column < m.getColumn(); column++) {
-				m.getData()[row][column] = (double) Math.random() * 2 - 1;// random values between 1 and -1
+	public void randomize(Matrix matrix) {
+		for (int row = 0; row < matrix.getRow(); row++) {
+			for (int column = 0; column < matrix.getColumn(); column++) {
+				matrix.getData()[row][column] = (double) Math.random() * 2 - 1;// random values between 1 and -1
 			}
 		}
 	}
@@ -68,15 +69,19 @@ public class Classifier {
 		inputNodes = Matrix.fromArray(inputs);
 
 		// feed forward through the multiple input layers
-		for (int index = 0; index < numOfHiddenLayers; index++) {
-			// dotProduct inputs with hidden weights to get hidden layer
-			hiddenNodes[index] = Matrix.dotProduct(hiddenWeights[index], inputNodes);
-
+		for (int hiddenLayerIndex = 0; hiddenLayerIndex < numOfHiddenLayers; hiddenLayerIndex++) {
+			// dotProduct inputs/previous hidden layer output with hidden weights to get hidden layer
+			if(hiddenLayerIndex == 0) {
+				hiddenNodes[hiddenLayerIndex] = Matrix.dotProduct(hiddenWeights[hiddenLayerIndex], inputNodes);
+			}
+			else {
+				hiddenNodes[hiddenLayerIndex] = Matrix.dotProduct(hiddenWeights[hiddenLayerIndex], hiddenNodes[hiddenLayerIndex-1] );
+			}
 			// add bias to result
-			hiddenNodes[index] = Matrix.add(hiddenNodes[index], hiddenBias[index]);
+			hiddenNodes[hiddenLayerIndex] = Matrix.add(hiddenNodes[hiddenLayerIndex], hiddenBias[hiddenLayerIndex]);
 
 			// apply the Sigmoid activation function
-			hiddenNodes[index] = activation(hiddenNodes[index]);
+			hiddenNodes[hiddenLayerIndex] = activation(hiddenNodes[hiddenLayerIndex]);
 		}
 		// dotProduct hidden layer with output weights to get output layer
 		outputNodes = Matrix.dotProduct(outputWeights, hiddenNodes[numOfHiddenLayers - 1]);
@@ -131,30 +136,30 @@ public class Classifier {
 		// adjust output bias
 		outputBiasDelta = Matrix.add(outputBias, Matrix.add(outputBias, outputGradient));
 
-		for (int index = numOfHiddenLayers - 1; index > -1; index--) {
+		for (int hiddenLayerIndex = numOfHiddenLayers - 1; hiddenLayerIndex > -1; hiddenLayerIndex--) {
 			// gradient input
-			hiddenGradient[index] = sigmoidDerivative(hiddenNodes[index]);
+			hiddenGradient[hiddenLayerIndex] = sigmoidDerivative(hiddenNodes[hiddenLayerIndex]);
 
 			// multiple error
-			hiddenGradient[index] = Matrix.elementWise(hiddenError, hiddenGradient[index]);
+			hiddenGradient[hiddenLayerIndex] = Matrix.elementWise(hiddenError, hiddenGradient[hiddenLayerIndex]);
 
 			// dotProduct learning rate
-			hiddenGradient[index] = Matrix.scalarMultiply(hiddenGradient[index], learningRate);
+			hiddenGradient[hiddenLayerIndex] = Matrix.scalarMultiply(hiddenGradient[hiddenLayerIndex], learningRate);
 
 			// adjust input bias
-			hiddenBiasDelta[index] = Matrix.add(hiddenBias[index],
-					Matrix.add(hiddenBias[index], hiddenGradient[index]));
+			hiddenBiasDelta[hiddenLayerIndex] = Matrix.add(hiddenBias[hiddenLayerIndex],
+					Matrix.add(hiddenBias[hiddenLayerIndex], hiddenGradient[hiddenLayerIndex]));
 
 			// dotProduct transposed weights
-			if (index == 0) {
-				hiddenWeightsDelta[index] = Matrix.add(hiddenWeightsDelta[index],
-						Matrix.dotProduct(hiddenGradient[index], Matrix.transpose(inputNodes)));
+			if (hiddenLayerIndex == 0) {
+				hiddenWeightsDelta[hiddenLayerIndex] = Matrix.add(hiddenWeightsDelta[hiddenLayerIndex],
+						Matrix.dotProduct(hiddenGradient[hiddenLayerIndex], Matrix.transpose(inputNodes)));
 			} else {
-				hiddenWeightsDelta[index] = Matrix.add(hiddenWeightsDelta[index],
-						Matrix.dotProduct(hiddenGradient[index], Matrix.transpose(hiddenNodes[index - 1])));
+				hiddenWeightsDelta[hiddenLayerIndex] = Matrix.add(hiddenWeightsDelta[hiddenLayerIndex],
+						Matrix.dotProduct(hiddenGradient[hiddenLayerIndex], Matrix.transpose(hiddenNodes[hiddenLayerIndex - 1])));
 
 				// calculate hidden error for next iteration
-				hiddenError = Matrix.dotProduct(Matrix.transpose(hiddenWeights[index]), hiddenError);
+				hiddenError = Matrix.dotProduct(Matrix.transpose(hiddenWeights[hiddenLayerIndex]), hiddenError);
 			}
 
 		}
@@ -167,15 +172,15 @@ public class Classifier {
 		outputWeights = Matrix.add(outputWeights, outputWeightsDelta);
 
 		// adjust hidden weights and bias
-		for (int index = 0; index < numOfHiddenLayers; index++) {
-			hiddenWeightsDelta[index] = Matrix.scalarMultiply(hiddenWeightsDelta[index], (double) 1 / 2810);
-			hiddenWeights[index] = Matrix.add(hiddenWeights[index], hiddenWeightsDelta[index]);
-			hiddenBias[index] = Matrix.scalarMultiply(hiddenBiasDelta[index], (double) 1 / 2810);
+		for (int hiddenLayerIndex = 0; hiddenLayerIndex < numOfHiddenLayers; hiddenLayerIndex++) {
+			hiddenWeightsDelta[hiddenLayerIndex] = Matrix.scalarMultiply(hiddenWeightsDelta[hiddenLayerIndex], (double) 1 / 2810);
+			hiddenWeights[hiddenLayerIndex] = Matrix.add(hiddenWeights[hiddenLayerIndex], hiddenWeightsDelta[hiddenLayerIndex]);
+			hiddenBias[hiddenLayerIndex] = Matrix.scalarMultiply(hiddenBiasDelta[hiddenLayerIndex], (double) 1 / 2810);
 
 			// initialize
-			hiddenGradient[index] = new Matrix(hiddenGradient[index].getRow(), 1);
-			hiddenWeightsDelta[index] = new Matrix(hiddenWeightsDelta[index].getRow(),
-					hiddenWeightsDelta[index].getColumn());
+			hiddenGradient[hiddenLayerIndex] = new Matrix(hiddenGradient[hiddenLayerIndex].getRow(), 1);
+			hiddenWeightsDelta[hiddenLayerIndex] = new Matrix(hiddenWeightsDelta[hiddenLayerIndex].getRow(),
+					hiddenWeightsDelta[hiddenLayerIndex].getColumn());
 		}
 
 		// calculate average error
@@ -205,10 +210,10 @@ public class Classifier {
 	}
 	
 	// apply the derivative of the sigmoid function to the matrix
-	public static Matrix sigmoidDerivative(Matrix a) {
-		Matrix result = new Matrix(a.getRow(), a.getColumn());
-		for (int row = 0; row < a.getRow(); row++) {
-			result.getData()[row][0] = a.getData()[row][0] * (1 - a.getData()[row][0]);
+	public static Matrix sigmoidDerivative(Matrix matrix) {
+		Matrix result = new Matrix(matrix.getRow(), matrix.getColumn());
+		for (int row = 0; row < matrix.getRow(); row++) {
+			result.getData()[row][0] = matrix.getData()[row][0] * (1 - matrix.getData()[row][0]);
 		}
 		return result;
 	}

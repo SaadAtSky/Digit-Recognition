@@ -8,52 +8,21 @@ import java.io.File;
  * The results are displayed using the metric accuracy score which is the percentage of correct predictions over total predictions
  */
 public class Main {
-	public static void main(String[] args) {
-		File file1 = new File("dataset1");
-		File file2 = new File("dataset2");
-
-		double[][] dataset1 = Utility.readFile(file1);
-		double[][] dataset2 = Utility.readFile(file2);
-		int[] testLabelsDataset1 = Utility.getLabels1();
-		int[] testLabelsDataset2 = Utility.getLabels2();
-
-		int inputNodes = 64;
-		int hiddenNodes = 8;
-		int outputNodes = 10;
-		int numberOfHiddenLayers = 1;
-		double[][] inputArray;
-		double[][] targetArray;
-		int epochsLimit = 50000;
-		int sizeOfDataset = 2810;
-
-		Classifier mlp = new Classifier(inputNodes, hiddenNodes, outputNodes, numberOfHiddenLayers);
-		mlp.setLearningRate(0.1);
-
-		System.out.println("Started Training");
-		// Batch training method implemented
-		// with 'epochsLimit' representing the total number of times the classifier is
-		// trained on the Whole data set
-		for (int epochs = 0; epochs < epochsLimit; epochs++) {
-			if (epochs % 1000 == 0) {
-				System.out.println(epochs);
-			}
-			// send inputs one by one to the classifier for training
-			for (int datasetIndex = 0; datasetIndex < sizeOfDataset; datasetIndex++) {
-				inputArray = Utility.singleInput(dataset1, datasetIndex);
-				targetArray = Utility.makeTargetArray(testLabelsDataset1[datasetIndex]);
-				mlp.train(inputArray, targetArray);
-			}
-			// Changing of weights and biases once the whole data set is sent as input to
-			// the classifier for training
-			mlp.change();
-		}
-		System.out.println("Finished Training");
-
+	private static int sizeOfDataset=2810;
+	private static double[][] trainData,testData;
+	private static int[] trainLabels,testLabels;
+	private static int[] predictions = new int[sizeOfDataset];
+	private static Classifier mlp;
+	
+	public int[] getPredictions() {
+		return predictions;
+	}
+	// make predictions using the classifier. Then, calculate and display accuracy score
+	static void predict() {
 		int predictionIndex = 0;
-		int correctPredictions = 0;
 		// count correct predictions for the test data
 		while (predictionIndex < sizeOfDataset) {
-			double[][] output = mlp.feedforward(Utility.singleInput(dataset2, predictionIndex));
+			double[][] output = mlp.feedforward(Utility.singleInput(testData, predictionIndex));
 			double highestValue = output[0][0];
 			int prediction = 0;
 			// iterate through the output nodes to keep track of the most activated node
@@ -63,16 +32,69 @@ public class Main {
 					prediction = outputNodesIndex;
 				}
 			}
-			// increment 'correctPredictions' if the most activated node represents the
-			// correct label
-			if (prediction == testLabelsDataset2[predictionIndex]) {
-				correctPredictions++;
-			}
-//			System.out.println("PREDICTION: "+prediction);
-//			System.out.println("ANSWER: "+Utility.getLabels2()[predictionIndex]);
+			predictions[predictionIndex] = prediction;
 			predictionIndex++;
 		}
+	}
+	
+	// display accuracy percentage and total correct predictions out of total predictions
+	static void accuracy() {
+		int correctPredictions = 0;
+		for (int datasetIndex = 0; datasetIndex < sizeOfDataset; datasetIndex++) {
+			if (testLabels[datasetIndex] == predictions[datasetIndex]) {
+				correctPredictions++;
+			}
+		}
+
+		System.out.println(correctPredictions+" out of "+sizeOfDataset);
 		System.out.println("Accuracy: " + (double) correctPredictions / sizeOfDataset * 100);
+	}
+	public static void MLP_ApplicationRunner(File file1, File file2) {
+		// define data and labels
+		trainData = Utility.readFile(file1);
+		testData = Utility.readFile(file2);
+		if (file1.getName().equals("dataset1")) {
+			trainLabels = Utility.getLabels1();
+			testLabels = Utility.getLabels2();
+		} else if (file1.getName().equals("dataset2")) {
+			trainLabels = Utility.getLabels2();
+			testLabels = Utility.getLabels1();
+		}
+		
+		int inputNodes = 64;
+		int hiddenNodes = 64;
+		int outputNodes = 10;
+		int numberOfHiddenLayers = 1;
+		double[][] inputArray,targetArray;
+		int epochsLimit = 20000;
+		int sizeOfDataset = 2810;
+
+		mlp = new Classifier(inputNodes, hiddenNodes, outputNodes, numberOfHiddenLayers);
+		mlp.setLearningRate(0.1);
+
+		// Batch training method implemented
+		// with 'epochsLimit' representing the total number of times the classifier is trained on the Whole data set
+		for (int epochs = 0; epochs < epochsLimit; epochs++) {
+			// send inputs one by one to the classifier for training
+			for (int datasetIndex = 0; datasetIndex < sizeOfDataset; datasetIndex++) {
+				inputArray = Utility.singleInput(trainData, datasetIndex);
+				targetArray = Utility.makeTargetArray(trainLabels[datasetIndex]);
+				mlp.train(inputArray, targetArray);
+			}
+			// Changing of weights and biases once the whole data set is sent as input to the classifier for training
+			mlp.change();
+		}
+		predict();
+		
+		accuracy();
+	}
+	public static void main(String[] args) {
+		// set train and test files
+		final String trainFile = "dataset1";
+		final String testFile = "dataset2";
+
+		MLP_ApplicationRunner(new File(trainFile),new File(testFile));
+
 	}
 
 }

@@ -10,7 +10,7 @@ public class Matrix {
 	private int column;
 	private double[][] data;
 
-	// defines the matix's dimensions
+	// defines the matrix's dimensions
 	public Matrix(int row, int column) {
 		setRow(row);
 		setColumn(column);
@@ -23,14 +23,14 @@ public class Matrix {
 	}
 
 	// Matrix dot Product
-	public static Matrix dotProduct(Matrix m1, Matrix m2) {
-		Matrix result = new Matrix(m1.getRow(), m2.getColumn());
+	public static Matrix dotProduct(Matrix firstMatrix, Matrix secondMatrix) {
+		Matrix result = new Matrix(firstMatrix.getRow(), secondMatrix.getColumn());
 		double sum = 0;
 		for (int row = 0; row < result.getRow(); row++) {
 			sum = 0;
 			for (int column = 0; column < result.getColumn(); column++) {
-				for (int index = 0; index < m1.getColumn(); index++) {
-					sum = sum + m1.getData()[row][index] * m2.getData()[index][column];
+				for (int index = 0; index < firstMatrix.getColumn(); index++) {
+					sum = sum + firstMatrix.getData()[row][index] * secondMatrix.getData()[index][column];
 				}
 				result.getData()[row][column] = sum;
 			}
@@ -38,16 +38,16 @@ public class Matrix {
 		return result;
 	}
 
-	// add m1 new column to the end of the matrix
+	// add matrix new column to the end of the matrix
 	// containing the value '1' for each row
-	public static Matrix addOnes(Matrix m1) {
-		Matrix result = new Matrix(m1.getRow(), m1.getColumn() + 1);
+	public static Matrix addOnes(Matrix matrix) {
+		Matrix result = new Matrix(matrix.getRow(), matrix.getColumn() + 1);
 		for (int row = 0; row < result.getRow(); row++) {
 			for (int column = 0; column < result.getColumn(); column++) {
-				if (column == m1.getColumn()) {
+				if (column == matrix.getColumn()) {
 					result.getData()[row][column] = 1;
 				} else {
-					result.getData()[row][column] = m1.getData()[row][column];
+					result.getData()[row][column] = matrix.getData()[row][column];
 				}
 
 			}
@@ -56,73 +56,73 @@ public class Matrix {
 	}
 
 	// find the absolute value using the Pythagoras Theorum
-	public static double absoluteValue(Matrix m1) {
+	public static double absoluteValue(Matrix matrix) {
 		double sumOfSquares = 0;
-		for (int row = 0; row < m1.getRow(); row++) {
-			for (int column = 0; column < m1.getColumn(); column++) {
-				sumOfSquares = sumOfSquares + Math.pow(m1.getData()[row][column], 2);
+		for (int row = 0; row < matrix.getRow(); row++) {
+			for (int column = 0; column < matrix.getColumn(); column++) {
+				sumOfSquares = sumOfSquares + Math.pow(matrix.getData()[row][column], 2);
 			}
 		}
 		return Math.sqrt(sumOfSquares);
 	}
 
-	// multipy m1 Matrix by m1 scalar value
-	public static Matrix scalarMultiply(Matrix m1, double scalarMultiplier) {
-		Matrix result = new Matrix(m1.getRow(), m1.getColumn());
+	// multipy matrix Matrix by matrix scalar value
+	public static Matrix scalarMultiply(Matrix matrix, double scalarMultiplier) {
+		Matrix result = new Matrix(matrix.getRow(), matrix.getColumn());
 		for (int row = 0; row < result.getRow(); row++) {
 			for (int column = 0; column < result.getColumn(); column++) {
-				result.getData()[row][column] = m1.getData()[row][column] * scalarMultiplier;
+				result.getData()[row][column] = matrix.getData()[row][column] * scalarMultiplier;
 			}
 		}
 		return result;
 	}
 
 	// element wise multiplication of two matrices
-	public static Matrix elementWise(Matrix m1, Matrix m2) {
-		Matrix result = new Matrix(m1.getRow(), m1.getColumn());
+	public static Matrix elementWise(Matrix firstMatrix, Matrix secondMatrix) {
+		Matrix result = new Matrix(firstMatrix.getRow(), firstMatrix.getColumn());
 		for (int row = 0; row < result.getRow(); row++) {
 			for (int column = 0; column < result.getColumn(); column++) {
-				result.getData()[row][column] = m1.getData()[row][column] * m2.getData()[row][column];
+				result.getData()[row][column] = firstMatrix.getData()[row][column] * secondMatrix.getData()[row][column];
 			}
 		}
 		return result;
 	}
 
 	// add two matrices
-	public static Matrix add(Matrix m1, Matrix m2) {
-		Matrix result = new Matrix(m1.getRow(), m1.getColumn());
+	public static Matrix add(Matrix firstMatrix, Matrix secondMatrix) {
+		Matrix result = new Matrix(firstMatrix.getRow(), firstMatrix.getColumn());
 		for (int row = 0; row < result.getRow(); row++) {
 			for (int column = 0; column < result.getColumn(); column++) {
-				result.getData()[row][column] = m1.getData()[row][column] + m2.getData()[row][column];
+				result.getData()[row][column] = firstMatrix.getData()[row][column] + secondMatrix.getData()[row][column];
 			}
 		}
 		return result;
 	}
 
 	// subtract two matrices
-	public static Matrix subtract(Matrix m1, Matrix m2) {
-		Matrix result = new Matrix(m1.getRow(), m1.getColumn());
-		for (int row = 0; row < m1.getRow(); row++) {
-			result.getData()[row][0] = m1.getData()[row][0] - m2.getData()[row][0];
+	public static Matrix subtract(Matrix firstMatrix, Matrix secondMatrix) {
+		Matrix result = new Matrix(firstMatrix.getRow(), firstMatrix.getColumn());
+		for (int row = 0; row < firstMatrix.getRow(); row++) {
+			result.getData()[row][0] = firstMatrix.getData()[row][0] - secondMatrix.getData()[row][0];
 		}
 		return result;
 	}
 
-	// subtract m1 scalar value from m1 matrix
-	public static Matrix subtractScalar(Matrix m1, double scalarValue) {
-		Matrix result = new Matrix(m1.getRow(), m1.getColumn());
-		for (int row = 0; row < m1.getRow(); row++) {
-			result.getData()[row][0] = m1.getData()[row][0] - scalarValue;
+	// subtract matrix scalar value from matrix matrix
+	public static Matrix subtractScalar(Matrix matrix, double scalarValue) {
+		Matrix result = new Matrix(matrix.getRow(), matrix.getColumn());
+		for (int row = 0; row < matrix.getRow(); row++) {
+			result.getData()[row][0] = matrix.getData()[row][0] - scalarValue;
 		}
 		return result;
 	}
 
 	// flip the matrix so that rows = columns and column = rows
-	public static Matrix transpose(Matrix m1) {
-		Matrix result = new Matrix(m1.getColumn(), m1.getRow());
+	public static Matrix transpose(Matrix matrix) {
+		Matrix result = new Matrix(matrix.getColumn(), matrix.getRow());
 		for (int row = 0; row < result.getRow(); row++) {
 			for (int column = 0; column < result.getColumn(); column++) {
-				result.getData()[row][column] = m1.getData()[column][row];
+				result.getData()[row][column] = matrix.getData()[column][row];
 			}
 		}
 		return result;
@@ -160,11 +160,11 @@ public class Matrix {
 	}
 
 	// convert matrix to array with the same dimensions
-	public static double[][] toArray(Matrix m1) {
-		double[][] result = new double[m1.getRow()][m1.getColumn()];
-		for (int row = 0; row < m1.getRow(); row++) {
-			for (int column = 0; column < m1.getColumn(); column++) {
-				result[row][column] = m1.getData()[row][column];
+	public static double[][] toArray(Matrix matrix) {
+		double[][] result = new double[matrix.getRow()][matrix.getColumn()];
+		for (int row = 0; row < matrix.getRow(); row++) {
+			for (int column = 0; column < matrix.getColumn(); column++) {
+				result[row][column] = matrix.getData()[row][column];
 			}
 		}
 		return result;

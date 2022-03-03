@@ -11,8 +11,8 @@ public class Classifier {
 	private Matrix trainData;
 	private Matrix labels;
 	private int[] classes;
-	private double marginConstant = 5000;
-	private double learningRate = 0.00001;
+	private double marginConstant = 1000;
+	private double learningRate = 0.0001;
 
 	Classifier(double[][] trainDataArray, int[] labelsArray, int[] classesArray) {
 		// set the unique pair of classes to be classified
@@ -33,9 +33,9 @@ public class Classifier {
 	// make prediction (1 or -1) for a single input value
 	// based on if the point if above or below the hyper plane
 	// and return the associated class value
-	public int predict(double[] td) {
+	public int predict(double[] trainDataArray) {
 		// w.x + b >= 1 or <=-1
-		Matrix testData = Matrix.transpose(Matrix.from1DArrayDouble(td));
+		Matrix testData = Matrix.transpose(Matrix.from1DArrayDouble(trainDataArray));
 		testData = Matrix.addOnes(testData);
 		Matrix result = new Matrix(1, 1);
 
@@ -60,7 +60,7 @@ public class Classifier {
 			if (hingeLoss == 0) {
 				result = Matrix.add(result, weights);
 			} else {
-				// delta = w - Cyx
+				// delta = weights - Constant*labels*input
 				Matrix delta = new Matrix(weights.getRow(), weights.getColumn());
 				for (int index = 0; index < weights.getRow(); index++) {
 					delta.getData()[index][0] = trainData.getData()[row][index] * marginConstant
@@ -115,11 +115,10 @@ public class Classifier {
 
 	}
 
-	void randomize(Matrix m) {
-		for (int row = 0; row < m.getRow(); row++) {
-			for (int column = 0; column < m.getColumn(); column++) {
-//				m.getData()[row][column] = (double)Math.random()*2-1;//value between 1 and -1
-				m.getData()[row][column] = 0;//
+	void randomize(Matrix matrix) {
+		for (int row = 0; row < matrix.getRow(); row++) {
+			for (int column = 0; column < matrix.getColumn(); column++) {
+				matrix.getData()[row][column] = 0;
 			}
 		}
 	}
@@ -197,12 +196,12 @@ public class Classifier {
 	}
 
 	// assign 1 or -1 representing if the point is above or below the hyperplane
-	Matrix positionOfPoint(Matrix a) {
-		Matrix result = new Matrix(a.getRow(), a.getColumn());
-		for (int row = 0; row < a.getRow(); row++) {
-			if (a.getData()[row][0] > 0) {
+	Matrix positionOfPoint(Matrix matrix) {
+		Matrix result = new Matrix(matrix.getRow(), matrix.getColumn());
+		for (int row = 0; row < matrix.getRow(); row++) {
+			if (matrix.getData()[row][0] > 0) {
 				result.getData()[row][0] = 1;
-			} else if (a.getData()[row][0] < 0) {
+			} else if (matrix.getData()[row][0] < 0) {
 				result.getData()[row][0] = -1;
 			}
 		}

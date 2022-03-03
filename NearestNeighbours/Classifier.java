@@ -21,9 +21,9 @@ public class Classifier {
 	private int[][] dataset2 = new int[sizeOfDataset][numberOfColumnsInDataset];
 
 	// store the two data sets in file variables
-	public Classifier(File f1, File f2) {
-		fileDataset1 = f1;
-		fileDataset2 = f2;
+	public Classifier(File file1, File file2) {
+		fileDataset1 = file1;
+		fileDataset2 = file2;
 	}
 
 	// read data from the files
@@ -145,5 +145,11 @@ public class Classifier {
 		System.out.println("Accuracy Dataset1: " + accuracyDataset1 + " %");
 		System.out.println("Accuracy Dataset2: " + accuracyDataset2 + " %");
 		System.out.println("Overall Accuracy: " + ((accuracyDataset1 + accuracyDataset2) / numberOfDatasets) + " %");
+	}
+	public int[] getPredictions1() {
+		return predictions1;
+	}
+	public int[] getPredictions2() {
+		return predictions2;
 	}
 }

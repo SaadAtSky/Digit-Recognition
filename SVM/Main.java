@@ -17,8 +17,12 @@ public class Main {
 	private static Classifier[] classifiers = new Classifier[numberOfClassPairs];
 	private static int[] votingArray = new int[numberOfClassPairs];
 	private static int[] predictions = new int[sizeOfDataset];
-	private static double[][] dataset1, dataset2;
-	private static int[] LabelsDataset1, LabelsDataset2;
+	private static double[][] trainData, testData;
+	private static int[] trainLabels, testLabels;
+	
+	public int[] getPredictions() {
+		return predictions;
+	}
 
 	public static void trainSingleClassifier(int classifierCounter) {
 		int epochsLimit = 50000;
@@ -28,19 +32,14 @@ public class Main {
 		// store the cost function value to test for patience EPOCHS
 		double oldCostFunction = classifiers[classifierCounter].computeCostFunction();
 		for (int epochs = 0; epochs < epochsLimit; epochs++) {
-//			if (epochs % 1000 == 0) {
-//				System.out.println(epochs);
-//			}
 			// choose to either train using the batched or sochastic gradient descent method
 			classifiers[classifierCounter].batchGradientDescent();
 			if (epochs % patienceEpochs == 0 && epochs != 0) {
 				if ((int) classifiers[classifierCounter].computeCostFunction() >= (int) oldCostFunction) {
-//					classifiers[classifierCounter].dropLearningRate();
 					System.out.println("EPOCHS: " + epochs);
 					break;
 				} else {
 					oldCostFunction = classifiers[classifierCounter].computeCostFunction();
-					System.out.println(oldCostFunction);
 				}
 			}
 		}
@@ -48,10 +47,10 @@ public class Main {
 
 	// make predictions using each SVM classifier and store the most frequently
 	// occured value as the predicted value for that particular input data
-	public static void predictions() {
+	public static void predict() {
 		for (int datasetIndex = 0; datasetIndex < sizeOfDataset; datasetIndex++) {
 			for (int classifierIndex = 0; classifierIndex < numberOfClassPairs; classifierIndex++) {
-				votingArray[classifierIndex] = classifiers[classifierIndex].predict(dataset2[datasetIndex]);
+				votingArray[classifierIndex] = classifiers[classifierIndex].predict(testData[datasetIndex]);
 			}
 			// choose the most frequent answer as the prediction
 			predictions[datasetIndex] = Utility.mostFrequent(votingArray);
@@ -62,7 +61,7 @@ public class Main {
 	public static void accuracy() {
 		int correctPredictions = 0;
 		for (int datasetIndex = 0; datasetIndex < sizeOfDataset; datasetIndex++) {
-			if (LabelsDataset2[datasetIndex] == predictions[datasetIndex]) {
+			if (testLabels[datasetIndex] == predictions[datasetIndex]) {
 				correctPredictions++;
 			}
 		}
@@ -71,17 +70,17 @@ public class Main {
 		System.out.println(correctPredictions+" out of "+sizeOfDataset);
 		System.out.println("Accuracy: " + (double) correctPredictions / sizeOfDataset * 100);
 	}
-
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		File file1 = new File("dataset1");
-		File file2 = new File("dataset2");
-
+	public static void SVM_ApplicationRunner(File file1, File file2) {
 		// define data and labels
-		dataset1 = Utility.readFile(file1);
-		dataset2 = Utility.readFile(file2);
-		LabelsDataset1 = Utility.getLabels1();
-		LabelsDataset2 = Utility.getLabels2();
+		trainData = Utility.readFile(file1);
+		testData = Utility.readFile(file2);
+		if (file1.getName().equals("dataset1")) {
+			trainLabels = Utility.getLabels1();
+			testLabels = Utility.getLabels2();
+		} else if (file1.getName().equals("dataset2")) {
+			trainLabels = Utility.getLabels2();
+			testLabels = Utility.getLabels1();
+		}
 
 		int classifierCounter = 0;
 		int secondClassFirstElement = 1;
@@ -98,7 +97,7 @@ public class Main {
 				classes[1] = secondClass;
 
 				// instantiate and train a new SVM classifier for each unique pair
-				classifiers[classifierCounter] = new Classifier(dataset1, LabelsDataset1, classes);
+				classifiers[classifierCounter] = new Classifier(trainData, trainLabels, classes);
 				trainSingleClassifier(classifierCounter);
 				
 				classifierCounter++;
@@ -107,10 +106,17 @@ public class Main {
 			}
 			secondClassFirstElement++;
 		}
-
-		predictions();
+		
+		predict();
 
 		accuracy();
+	}
+	public static void main(String[] args) {
+		// set train and test files
+		final String trainFile = "dataset1";
+		final String testFile = "dataset2";
+		
+		SVM_ApplicationRunner(new File(trainFile),new File(testFile));
 
 	}
 
